@@ -9,14 +9,16 @@ import { seed } from './seed.mjs';
 import { READS,TABLES,mutate,resolve,trace,importVintrace,exportAll,draft } from './lib/domain.mjs';
 import { parseCsv } from './lib/csv.mjs';
 const temp=mkdtempSync(path.join(os.tmpdir(),'winery-smoke-'));
-process.env.DATABASE_URL='';process.env.DATA_DIR=path.join(temp,'db');process.env.OUTPUT_DIR=temp;
+const testUrl=process.env.TEST_DATABASE_URL||'';
+if(testUrl){const u=new URL(testUrl);if(!['localhost','127.0.0.1','[::1]'].includes(u.hostname)||u.pathname!=='/rebuild_test')throw Error('TEST_DATABASE_URL must point to the local disposable rebuild_test database');}
+process.env.DATABASE_URL=testUrl;process.env.DATA_DIR=path.join(temp,'db');process.env.OUTPUT_DIR=temp;
 const env={...process.env};let checks=0;
 function check(v,msg){assert.ok(v,msg);checks++;}
 const today=new Date().toISOString().slice(0,10),by={recorded_by:'Test winemaker',note:'Verified test event'};
 let db;
 function cli(script,args=[],success=true){const p=spawnSync(process.execPath,[path.join(REPO_ROOT,'scripts',script+'.mjs'),...args],{cwd:REPO_ROOT,env,encoding:'utf8',timeout:45000});assert.equal(p.status,success?0:1,p.stdout+'\n'+p.stderr);checks++;return p;}
 try{
- db=await getDb();await migrate(db);assert.equal((await migrate(db)).ran.length,0);checks++;
+ db=await getDb();if(testUrl){const existing=await db.query("select tablename from pg_tables where schemaname='public'");if(existing.length)throw Error('Postgres smoke test requires an empty disposable database');}await migrate(db);assert.equal((await migrate(db)).ran.length,0);checks++;
  await seed(db);const count=await db.query('select count(*)::int as n from lots');await seed(db);assert.deepEqual(await db.query('select count(*)::int as n from lots'),count);checks++;
  for(const [name,sql] of Object.entries(READS)){const rows=await db.query(sql);check(Array.isArray(rows),name);}
  check((await db.query(READS.attention)).some(r=>r.issue==='Overdue work'),'Overdue demo rows');
@@ -85,5 +87,5 @@ try{
  cli('view');cli('docs');check(existsSync(path.join(temp,'views','week.html')),'Week HTML');check(readFileSync(path.join(temp,'views','week.html'),'utf8').includes('Demo Winery'),'Brand in HTML');check(readdirSync(path.join(temp,'docs-out','supply-statement')).length===1,'Supply document');
  const supply=readFileSync(path.join(temp,'docs-out','supply-statement',readdirSync(path.join(temp,'docs-out','supply-statement'))[0]),'utf8');check(supply.includes('Test Buyer')&&supply.includes('Sauvignon Blanc')&&!supply.includes('[object Object]'),'Supply composition rendered');
  const commands=readdirSync(path.join(REPO_ROOT,'.claude','commands')).filter(x=>x.endsWith('.md')&&x!=='README.md');check(commands.length===41,'Command count');
- console.log(`PASS: ${checks} checks; 41 agent commands; 15 domain record types. Isolated PGlite database.`);
+ console.log(`PASS: ${checks} checks; 41 agent commands; 15 domain record types. ${testUrl?'Disposable Postgres database':'Isolated PGlite database'}.`);
 }finally{if(db)await db.close();rmSync(temp,{recursive:true,force:true});}
