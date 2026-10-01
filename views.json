@@ -1,13 +1,66 @@
 [
   {
     "name": "week",
-    "title": "This week",
-    "subtitle": "Winery for Claude Code: what needs attention, rendered by npm run view",
+    "title": "Cellar week",
     "sections": [
       {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "title": "Wine in vessel",
+        "sql": "select * from cellar_view order by lot,vessel",
+        "columns": [
+          "lot",
+          "owner",
+          "vessel",
+          "litres",
+          "status",
+          "last_sample"
+        ]
+      },
+      {
+        "title": "Open cellar work",
+        "sql": "select * from work_view where status='open' order by due_on",
+        "columns": [
+          "job",
+          "lot",
+          "kind",
+          "due_on",
+          "assigned_to",
+          "lot_status"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "attention",
+    "title": "Cellar exceptions",
+    "sections": [
+      {
+        "title": "Needs a decision",
+        "sql": "select * from attention_view order by issue,reference"
+      },
+      {
+        "title": "Record checks",
+        "sql": "select * from compliance_view order by rule,reference",
+        "note": "Checks of recorded evidence, not a certification."
+      }
+    ]
+  },
+  {
+    "name": "capacity",
+    "title": "Tank space",
+    "sections": [
+      {
+        "title": "Vessels",
+        "sql": "select * from capacity_view order by vessel"
+      }
+    ]
+  },
+  {
+    "name": "owners",
+    "title": "Contract winemaking review",
+    "sections": [
+      {
+        "title": "Wine, work and contact",
+        "sql": "select * from owner_view order by owner"
       }
     ]
   }

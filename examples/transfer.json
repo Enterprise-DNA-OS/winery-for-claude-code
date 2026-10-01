@@ -1,0 +1,8 @@
+{
+  "lot": "26-SB-RIVER",
+  "vessel": "T01",
+  "to_vessel": "T04",
+  "litres": 1000,
+  "recorded_by": "Demo operator",
+  "note": "Measured demo transfer"
+}

@@ -29,6 +29,7 @@ function fmt(v, key, row) {
   if (v === null || v === undefined) return '';
   if (v instanceof Date) return v.toISOString().replace('T', ' ').replace('.000Z', ' UTC');
   if (key.endsWith('_cents')) return `${row.currency || ''} ${(Number(v) / 100).toFixed(2)}`.trim();
+  if (typeof v === 'object') return JSON.stringify(v);
   if (typeof v === 'number' && !Number.isInteger(v)) return v.toFixed(2);
   return v;
 }

@@ -1,0 +1,19 @@
+{
+  "name": "26-SB-BLEND",
+  "vessel": "T04",
+  "source_ref": "BLEND-SHEET-01",
+  "inputs": [
+    {
+      "lot": "26-SB-RIVER",
+      "vessel": "T01",
+      "litres": 600
+    },
+    {
+      "lot": "26-SB-HILL",
+      "vessel": "T02",
+      "litres": 400
+    }
+  ],
+  "recorded_by": "Demo operator",
+  "note": "Verified demo blend"
+}

@@ -1,11 +1,80 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
+    "name": "lot-history",
+    "title": "Lot traceability record",
+    "for_each": "select id,name from lots",
     "file": "name",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      {
+        "title": "Lot identity",
+        "sql": "select * from lots where id=$1"
+      },
+      {
+        "title": "Origin composition",
+        "sql": "select vineyard,vintage,variety,region,fraction from origins where lot_id=$1"
+      },
+      {
+        "title": "Operations",
+        "sql": "select name,kind,occurred_on,recorded_by,litres,from_vessel,to_vessel,note,evidence from operations where lot_id=$1 order by occurred_on,created_at"
+      },
+      {
+        "title": "Winemaking inputs",
+        "sql": "select occurred_on,material,supplier,supplier_batch,quantity,unit,recorded_by from additions where lot_id=$1"
+      },
+      {
+        "title": "Analysis",
+        "sql": "select sampled_on,metric,value,unit,lab_ref from analyses where lot_id=$1 order by sampled_on"
+      }
+    ]
+  },
+  {
+    "name": "supply-statement",
+    "title": "Wine goods supply statement draft",
+    "for_each": "select id,name from supplies",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Supply particulars",
+        "sql": "select s.name,s.supplied_on,s.recorded_by,c.name as supplier,c.address as supplier_address,s.recipient,s.address as recipient_address,s.litres,l.name as lot,s.statement_ref,s.composition from supplies s join lots l on l.id=s.lot_id join clients c on c.id=l.client_id where s.id=$1",
+        "note": "Wine goods: bulk wine. Check composition and recipient details before signing or sharing."
+      }
+    ]
+  },
+  {
+    "name": "bottling-record",
+    "title": "Bottling record",
+    "for_each": "select id,name from bottlings",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Packaging trace",
+        "sql": "select b.name,b.bottled_on,l.name as lot,b.bottles,b.bottle_ml,b.litres,b.packaging_ref,b.recorded_by from bottlings b join lots l on l.id=b.lot_id where b.id=$1"
+      }
+    ]
+  },
+  {
+    "name": "cellar-work-order",
+    "title": "Cellar work order",
+    "for_each": "select id,name from work_orders",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Recorded job",
+        "sql": "select * from work_view where id=$1",
+        "note": "A work record, not an instruction to handle wine or chemicals without operator review."
+      }
+    ]
+  },
+  {
+    "name": "recall-review",
+    "title": "Recall exercise record",
+    "for_each": "select id,name from recalls",
+    "file": "name",
+    "sections": [
+      {
+        "title": "Exercise evidence",
+        "sql": "select r.name,r.performed_on,l.name as lot,r.reviewer,r.evidence,r.follow_up from recalls r join lots l on l.id=r.lot_id where r.id=$1"
+      }
     ]
   }
 ]
